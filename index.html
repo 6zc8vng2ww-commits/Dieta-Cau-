@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dieta Cauã">
+<title>Dieta Cauã</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: #0a0a0a;
+    color: #f0ede8;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+  .header {
+    background: linear-gradient(160deg, #1a1a1a 0%, #0f0f0f 100%);
+    border-bottom: 1px solid #222;
+    padding: 48px 20px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-inner { max-width: 480px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .label { font-size: 11px; letter-spacing: 3px; color: #666; text-transform: uppercase; font-weight: 500; }
+  .title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; color: #f0ede8; line-height: 1; margin-top: 4px; }
+  .date-text { font-size: 11px; color: #555; text-transform: capitalize; text-align: right; }
+  .day-status { font-size: 12px; font-weight: 500; margin-top: 4px; text-align: right; }
+  .progress-wrap { margin-top: 18px; }
+  .progress-labels { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: #666; }
+  .progress-bar { background: #1e1e1e; border-radius: 99px; height: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; background: linear-gradient(90deg, #f5a623, #f97316); }
+  .progress-fill.done { background: linear-gradient(90deg, #4ade80, #22c55e); }
+
+  .content { max-width: 480px; margin: 0 auto; padding: 20px 16px; }
+
+  .macros-card {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .macro-item { text-align: center; }
+  .macro-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+  .macro-value { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-top: 4px; }
+  .macro-meta { font-size: 9px; color: #444; margin-top: 2px; }
+
+  .sunday-card {
+    background: #1a1200;
+    border: 1px solid rgba(245,166,35,0.25);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sunday-title { font-size: 13px; font-weight: 600; color: #f5a623; }
+  .sunday-sub { font-size: 11px; color: #886030; margin-top: 2px; }
+  .toggle { width: 44px; height: 24px; border-radius: 99px; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; border: none; }
+  .toggle-knob { width: 18px; height: 18px; background: #fff; border-radius: 50%; position: absolute; top: 3px; transition: left 0.2s; }
+
+  .meal-card {
+    background: #111;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .meal-card.completed { background: #0d1a0d; border-color: rgba(34,197,94,0.25); }
+  .meal-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .meal-icon {
+    width: 42px; height: 42px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .meal-card.completed .meal-icon { background: rgba(22,64,22,0.5); }
+  .meal-info { flex: 1; }
+  .meal-name { font-size: 14px; font-weight: 600; color: #f0ede8; transition: color 0.3s; }
+  .meal-card.completed .meal-name { color: #4ade80; }
+  .meal-tags { display: flex; gap: 10px; margin-top: 4px; }
+  .tag-kcal { font-size: 11px; color: #f5a623; }
+  .tag-prot { font-size: 11px; color: #4ade80; }
+  .tag-carb { font-size: 11px; color: #60a5fa; }
+  .meal-time { font-size: 10px; color: #555; background: #1a1a1a; padding: 2px 7px; border-radius: 99px; margin-left: 6px; }
+  .chevron { color: #444; font-size: 10px; transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  .meal-items { border-top: 1px solid #1a1a1a; padding: 0 16px 14px; display: none; }
+  .meal-items.open { display: block; }
+  .meal-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #161616;
+    cursor: pointer;
+    user-select: none;
+  }
+  .meal-item:last-child { border-bottom: none; }
+  .checkbox {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 1.5px solid #333;
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    font-size: 12px;
+    color: #fff;
+  }
+  .checkbox.checked { background: #22c55e; border-color: #22c55e; }
+  .item-text { font-size: 13px; color: #ccc; transition: all 0.2s; }
+  .item-text.done { color: #555; text-decoration: line-through; }
+
+  .tips-card {
+    background: #0d0d1a;
+    border: 1px solid #1e1e40;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-top: 8px;
+  }
+  .tips-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 2px; font-weight: 500; margin-bottom: 10px; }
+  .tip { font-size: 12px; color: #666; line-height: 1.5; margin-top: 6px; }
+
+  .reset-btn {
+    width: 100%; margin-top: 20px;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid #222;
+    border-radius: 12px;
+    color: #444;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 1px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .reset-btn:active { border-color: #444; color: #666; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <p class="label">Plano alimentar</p>
+        <h1 class="title">Cauã</h1>
+      </div>
+      <div>
+        <p class="date-text" id="dateText"></p>
+        <p class="day-status" id="dayStatus"></p>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-labels">
+        <span id="mealCount">0/5 refeições</span>
+        <span id="pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <!-- Macros -->
+  <div class="macros-card">
+    <div class="macro-item">
+      <div class="macro-label">Kcal</div>
+      <div class="macro-value" style="color:#f5a623" id="macroKcal">2200</div>
+      <div class="macro-meta">meta: 2200</div>
+    </div>
+    <div class="macro-item">
+      <div class="macro-label">Prot</div>
+      <div class="macro-value" style="color:#4ade80" id="macroProt">180g</div>
+      <div class="macro-meta">meta: 180g</div>
+    </div>
+    <div class="macro-item">
+      <div class="macro-label">Carbo</div>
+      <div class="macro-value" style="color:#60a5fa">179g</div>
+      <div class="macro-meta">meta: 179g</div>
+    </div>
+    <div class="macro-item">
+      <div class="macro-label">Fat</div>
+      <div class="macro-value" style="color:#f472b6">63g</div>
+      <div class="macro-meta">meta: 63g</div>
+    </div>
+  </div>
+
+  <!-- Sunday card (hidden by default) -->
+  <div class="sunday-card" id="sundayCard" style="display:none">
+    <div>
+      <div class="sunday-title">Domingo flexível</div>
+      <div class="sunday-sub">Bate a proteína e fica nas ~2.200 kcal</div>
+    </div>
+    <button class="toggle" id="toggleBtn" style="background:#333" onclick="toggleFreeDay()">
+      <div class="toggle-knob" id="toggleKnob" style="left:3px"></div>
+    </button>
+  </div>
+
+  <!-- Meals -->
+  <div id="mealsContainer"></div>
+
+  <!-- Tips -->
+  <div class="tips-card">
+    <div class="tips-label">Lembretes</div>
+    <div class="tip">🥃 Bebeu? Corta os carbos no dia e mantém a proteína</div>
+    <div class="tip">⚖️ Pesa todo dia de manhã em jejum</div>
+    <div class="tip">😴 Sono ruim segura gordura abdominal — prioriza</div>
+    <div class="tip">🎯 Meta: 10% BF em ~3 meses</div>
+  </div>
+
+  <button class="reset-btn" onclick="resetDay()">Resetar o dia</button>
+</div>
+
+<script>
+const meals = [
+  {
+    id: "cafe", icon: "☀️", time: "08:00", label: "Café da Manhã",
+    kcal: 550, protein: 28, carb: 60, fat: 18,
+    items: ["4 ovos mexidos", "2 fatias de pão integral", "1 banana"]
+  },
+  {
+    id: "almoco", icon: "🥗", time: "14:00", label: "Almoço / Pré-treino",
+    kcal: 580, protein: 48, carb: 55, fat: 10,
+    items: ["200g frango grelhado", "150g arroz branco", "Salada à vontade", "Fio de azeite"]
+  },
+  {
+    id: "pos", icon: "💪", time: "17:00", label: "Pós-treino",
+    kcal: 300, protein: 32, carb: 30, fat: 3,
+    items: ["40g whey protein", "1 banana"]
+  },
+  {
+    id: "jantar", icon: "🌙", time: "19:30", label: "Jantar",
+    kcal: 320, protein: 42, carb: 8, fat: 10,
+    items: ["180g patinho moído ou tilápia", "Legumes refogados à vontade"]
+  },
+  {
+    id: "ceia", icon: "🌛", time: "22:00", label: "Ceia",
+    kcal: 450, protein: 30, carb: 26, fat: 22,
+    items: ["3 ovos mexidos", "2 fatias de pão integral", "2 fatias de queijo minas ou muçarela"]
+  }
+];
+
+let state = JSON.parse(localStorage.getItem('dietaState') || '{}');
+let expanded = {};
+let freeDay = false;
+
+function saveState() {
+  localStorage.setItem('dietaState', JSON.stringify(state));
+}
+
+function getStorageKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function loadDayState() {
+  const key = getStorageKey();
+  const saved = JSON.parse(localStorage.getItem('dietaDay_' + key) || '{}');
+  return saved;
+}
+
+function saveDayState(checked) {
+  const key = getStorageKey();
+  localStorage.setItem('dietaDay_' + key, JSON.stringify(checked));
+}
+
+let checked = loadDayState();
+
+function toggleItem(mealId, idx) {
+  const key = `${mealId}-${idx}`;
+  checked[key] = !checked[key];
+  saveDayState(checked);
+  render();
+}
+
+function toggleExpand(mealId) {
+  expanded[mealId] = !expanded[mealId];
+  render();
+}
+
+function toggleFreeDay() {
+  freeDay = !freeDay;
+  render();
+}
+
+function resetDay() {
+  checked = {};
+  saveDayState(checked);
+  render();
+}
+
+function getMealComplete(meal) {
+  return meal.items.every((_, i) => checked[`${meal.id}-${i}`]);
+}
+
+function render() {
+  const completedMeals = meals.filter(m => getMealComplete(m)).length;
+  const pct = Math.round((completedMeals / meals.length) * 100);
+
+  // Progress
+  document.getElementById('mealCount').textContent = `${completedMeals}/${meals.length} refeições`;
+  document.getElementById('pct').textContent = `${pct}%`;
+  const fill = document.getElementById('progressFill');
+  fill.style.width = pct + '%';
+  if (pct === 100) fill.classList.add('done');
+  else fill.classList.remove('done');
+
+  // Macros
+  const doneKcal = meals.filter(m => getMealComplete(m)).reduce((a, m) => a + m.kcal, 0);
+  const doneProt = meals.filter(m => getMealComplete(m)).reduce((a, m) => a + m.protein, 0);
+  document.getElementById('macroKcal').textContent = doneKcal > 0 ? doneKcal : 2200;
+  document.getElementById('macroProt').textContent = (doneProt > 0 ? doneProt : 180) + 'g';
+
+  // Date
+  const now = new Date();
+  const isSunday = now.getDay() === 0;
+  document.getElementById('dateText').textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const statusEl = document.getElementById('dayStatus');
+  statusEl.textContent = isSunday ? '☀️ Domingo livre' : '🟢 Dia de dieta';
+  statusEl.style.color = isSunday ? '#f5a623' : '#4ade80';
+  document.getElementById('sundayCard').style.display = isSunday ? 'flex' : 'none';
+
+  // Toggle
+  const btn = document.getElementById('toggleBtn');
+  const knob = document.getElementById('toggleKnob');
+  btn.style.background = freeDay ? '#f5a623' : '#333';
+  knob.style.left = freeDay ? '23px' : '3px';
+
+  // Meals
+  const container = document.getElementById('mealsContainer');
+  container.innerHTML = '';
+  meals.forEach(meal => {
+    const complete = getMealComplete(meal);
+    const isOpen = expanded[meal.id];
+    const card = document.createElement('div');
+    card.className = 'meal-card' + (complete ? ' completed' : '');
+
+    const itemsHtml = meal.items.map((item, i) => {
+      const key = `${meal.id}-${i}`;
+      const done = checked[key];
+      return `
+        <div class="meal-item" onclick="toggleItem('${meal.id}', ${i})">
+          <div class="checkbox ${done ? 'checked' : ''}">${done ? '✓' : ''}</div>
+          <span class="item-text ${done ? 'done' : ''}">${item}</span>
+        </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="meal-header" onclick="toggleExpand('${meal.id}')">
+        <div class="meal-icon">${complete ? '✅' : meal.icon}</div>
+        <div class="meal-info">
+          <div style="display:flex;align-items:center">
+            <span class="meal-name">${meal.label}</span>
+            <span class="meal-time">${meal.time}</span>
+          </div>
+          <div class="meal-tags">
+            <span class="tag-kcal">${meal.kcal} kcal</span>
+            <span class="tag-prot">${meal.protein}g prot</span>
+            <span class="tag-carb">${meal.carb}g carbo</span>
+          </div>
+        </div>
+        <span class="chevron ${isOpen ? 'open' : ''}">▼</span>
+      </div>
+      <div class="meal-items ${isOpen ? 'open' : ''}">${itemsHtml}</div>`;
+    container.appendChild(card);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
